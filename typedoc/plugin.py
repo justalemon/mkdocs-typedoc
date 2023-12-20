@@ -23,6 +23,7 @@ class TypeDocPlugin(BasePlugin):
         ('tsconfig', config_options.Type(str, required=True)),
         ('options', config_options.Type(str, required=False)),
         ('name', config_options.Type(str, required=False, default="TypeDoc API")),
+        ('env', config_options.Type(str, required=False, default="development")),
         ('disable_system_check', config_options.Type(bool, required=False, default=False)),
     )
 
@@ -83,7 +84,10 @@ class TypeDocPlugin(BasePlugin):
             flattened_config = [item for pair in typedoc_config for item in pair]
 
             command = ["npx", "typedoc", *flattened_config, src_path]
-            subprocess.run(command, check=True)
+            env = {
+                "NODE_ENV": os.environ["NODE_ENV"] if "NODE_ENV" in os.environ else self.config.get("env")
+            }
+            subprocess.run(command, env=env, check=True)
         except subprocess.CalledProcessError as e:
             log.error("TypeDoc failed with error code %d" % e.returncode)
             return files
